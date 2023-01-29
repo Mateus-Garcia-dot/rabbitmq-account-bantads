@@ -19,7 +19,7 @@ public class AccountConsumer {
         try {
             switch (accountStatus.getStatus()) {
                 case "CREATE" -> restTemplate.postForObject(accountUrlConfig.getAccountRFullUrl(), accountStatus.getAccount(), AccountStatus.class);
-                case "UPDATE" -> restTemplate.put(accountUrlConfig.getAccountRFullUrl(), accountStatus.getAccount());
+                case "UPDATE" -> restTemplate.put("%s/%d".formatted(accountUrlConfig.getAccountRFullUrl(), accountStatus.getAccount().getId()), accountStatus.getAccount());
                 case "DELETE" -> restTemplate.delete("%s/%d".formatted(accountUrlConfig.getAccountRFullUrl(), accountStatus.getAccount().getId()));
                 default -> System.out.println("Account creation failed");
             }

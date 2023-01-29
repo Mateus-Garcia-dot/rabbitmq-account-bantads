@@ -7,7 +7,6 @@ import com.bantads.accountOrchestrator.dto.AccountStatus;
 import lombok.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -41,22 +40,22 @@ public class AccountController {
         return restTemplate.postForObject(accountUrlConfig.getAccountCUDFullUrl(), account, Account.class);
     }
 
-    @PutMapping()
-    public Account updateAccount(@RequestBody Account account) {
+    @PutMapping("/{id}")
+    public Account updateAccount(@PathVariable long id, @RequestBody Account account) {
+        account.setId(id);
         AccountStatus accountStatus = new AccountStatus(account, "UPDATE", "Added to queue");
         rabbitTemplate.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY, accountStatus);
-        restTemplate.put(accountUrlConfig.getAccountCUDFullUrl(), account);
+        restTemplate.put("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), account);
         return account;
     }
 
     @DeleteMapping("/{id}")
-    public Account deleteAccount(@PathVariable Long id) {
+    public void deleteAccount(@PathVariable Long id) {
         Account account = new Account();
         account.setId(id);
         AccountStatus accountStatus = new AccountStatus(account, "DELETE", "Added to the queue");
         rabbitTemplate.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY, accountStatus);
         restTemplate.delete("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id));
-        return new Account();
     }
 
 }
