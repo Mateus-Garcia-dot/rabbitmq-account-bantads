@@ -4,9 +4,7 @@ import com.bantads.accountOrchestrator.dto.Account;
 import lombok.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -27,6 +25,23 @@ public class AccountController {
     @GetMapping()
     public Account[] getAccount() {
         return restTemplate.getForObject(accountR,  Account[].class );
+    }
+
+    @PostMapping()
+    public Account createAccount(@RequestParam Account account) {
+        return restTemplate.postForObject(accountCUD, account, Account.class);
+    }
+
+    @PutMapping()
+    public Account updateAccount(@RequestParam Account account) {
+        restTemplate.put(accountCUD, account);
+        return account;
+    }
+
+    @DeleteMapping()
+    public Account deleteAccount(@RequestParam Account account) {
+        restTemplate.delete(accountCUD, account);
+        return account;
     }
 
 }
