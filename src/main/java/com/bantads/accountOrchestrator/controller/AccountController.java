@@ -1,13 +1,15 @@
 package com.bantads.accountOrchestrator.controller;
 
+import com.bantads.accountOrchestrator.config.AccountUrlConfig;
+import com.bantads.accountOrchestrator.config.MessagingConfig;
 import com.bantads.accountOrchestrator.dto.Account;
+import com.bantads.accountOrchestrator.dto.AccountStatus;
 import lombok.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -16,32 +18,45 @@ import java.util.List;
 @RequestMapping("/account")
 public class AccountController {
 
-    private RabbitTemplate rabbitTemplate;
+    @Autowired private RabbitTemplate rabbitTemplate;
     @Autowired private RestTemplate restTemplate;
+    @Autowired private AccountUrlConfig accountUrlConfig;
 
-    private static final String accountCUD = "http://localhost:3000/account";
-    private static final String accountR = "http://localhost:3001/account";
+
 
     @GetMapping()
     public Account[] getAccount() {
-        return restTemplate.getForObject(accountR,  Account[].class );
+        return restTemplate.getForObject(accountUrlConfig.getAccountRFullUrl(),  Account[].class );
+    }
+
+    @GetMapping("/{id}")
+    public Account getAccountById(@PathVariable Long id) {
+        return restTemplate.getForObject("%s/%d".formatted(accountUrlConfig.getAccountRFullUrl(), id), Account.class);
     }
 
     @PostMapping()
-    public Account createAccount(@RequestParam Account account) {
-        return restTemplate.postForObject(accountCUD, account, Account.class);
+    public Account createAccount(@RequestBody Account account) {
+        AccountStatus accountStatus = new AccountStatus(account, "CREATE", "Added to queue");
+        rabbitTemplate.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY, accountStatus);
+        return restTemplate.postForObject(accountUrlConfig.getAccountCUDFullUrl(), account, Account.class);
     }
 
     @PutMapping()
-    public Account updateAccount(@RequestParam Account account) {
-        restTemplate.put(accountCUD, account);
+    public Account updateAccount(@RequestBody Account account) {
+        AccountStatus accountStatus = new AccountStatus(account, "UPDATE", "Added to queue");
+        rabbitTemplate.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY, accountStatus);
+        restTemplate.put(accountUrlConfig.getAccountCUDFullUrl(), account);
         return account;
     }
 
-    @DeleteMapping()
-    public Account deleteAccount(@RequestParam Account account) {
-        restTemplate.delete(accountCUD, account);
-        return account;
+    @DeleteMapping("/{id}")
+    public Account deleteAccount(@PathVariable Long id) {
+        Account account = new Account();
+        account.setId(id);
+        AccountStatus accountStatus = new AccountStatus(account, "DELETE", "Added to the queue");
+        rabbitTemplate.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY, accountStatus);
+        restTemplate.delete("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id));
+        return new Account();
     }
 
 }
