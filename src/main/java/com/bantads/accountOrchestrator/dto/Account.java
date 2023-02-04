@@ -9,8 +9,8 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class Account implements Serializable {
     private Long id;
-    private Long cliente;
-    private Long gerente;
-    private Double limite;
-    private Double saldo;
+    private Long customer;
+    private Long manager;
+    private Double limitAmount;
+    private Double balance;
 }
