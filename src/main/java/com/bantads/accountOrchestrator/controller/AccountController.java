@@ -22,10 +22,9 @@ public class AccountController {
     @Autowired private AccountUrlConfig accountUrlConfig;
 
 
-
     @GetMapping()
     public Account[] getAccount() {
-        return restTemplate.getForObject(accountUrlConfig.getAccountRFullUrl(),  Account[].class );
+          return restTemplate.getForObject(accountUrlConfig.getAccountRFullUrl(), Account[].class);
     }
 
     @GetMapping("/{id}")
@@ -36,16 +35,17 @@ public class AccountController {
     @PostMapping()
     public Account createAccount(@RequestBody Account account) {
         AccountStatus accountStatus = new AccountStatus(account, "CREATE", "Added to queue");
+        Account newAccount = restTemplate.postForObject(accountUrlConfig.getAccountCUDFullUrl(), account, Account.class);
         rabbitTemplate.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY, accountStatus);
-        return restTemplate.postForObject(accountUrlConfig.getAccountCUDFullUrl(), account, Account.class);
+        return newAccount;
     }
 
     @PutMapping("/{id}")
     public Account updateAccount(@PathVariable long id, @RequestBody Account account) {
         account.setId(id);
+        restTemplate.put("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), account);
         AccountStatus accountStatus = new AccountStatus(account, "UPDATE", "Added to queue");
         rabbitTemplate.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY, accountStatus);
-        restTemplate.put("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), account);
         return account;
     }
 
@@ -53,9 +53,9 @@ public class AccountController {
     public void deleteAccount(@PathVariable Long id) {
         Account account = new Account();
         account.setId(id);
+        restTemplate.delete("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id));
         AccountStatus accountStatus = new AccountStatus(account, "DELETE", "Added to the queue");
         rabbitTemplate.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY, accountStatus);
-        restTemplate.delete("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id));
     }
 
 }
