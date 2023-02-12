@@ -1,30 +1,45 @@
 package com.bantads.accountOrchestrator.consumer;
 
+import com.bantads.accountOrchestrator.config.AccountOrchestratorConfiguration;
+import com.bantads.accountOrchestrator.config.AccountRConfiguration;
 import com.bantads.accountOrchestrator.config.AccountUrlConfig;
-import com.bantads.accountOrchestrator.config.MessagingConfig;
-import com.bantads.accountOrchestrator.dto.AccountStatus;
+import com.bantads.accountOrchestrator.config.RabbitMqConfig;
+import com.bantads.accountOrchestrator.model.Account;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-@Component
+@Service
+@Data
+@AllArgsConstructor
 public class AccountConsumer {
 
-    @Autowired private AccountUrlConfig accountUrlConfig;
-    @Autowired private RestTemplate restTemplate;
+    private final RabbitTemplate rabbitTemplate;
+    private final RestTemplate restTemplate;
+    private final AccountUrlConfig accountUrlConfig;
 
-    @RabbitListener(queues = MessagingConfig.QUEUE)
-    public void consumeMessageFromQueue(AccountStatus accountStatus) {
-        try {
-            switch (accountStatus.getStatus()) {
-                case "CREATE" -> restTemplate.postForObject(accountUrlConfig.getAccountRFullUrl(), accountStatus.getAccount(), AccountStatus.class);
-                case "UPDATE" -> restTemplate.put("%s/%d".formatted(accountUrlConfig.getAccountRFullUrl(), accountStatus.getAccount().getId()), accountStatus.getAccount());
-                case "DELETE" -> restTemplate.delete("%s/%d".formatted(accountUrlConfig.getAccountRFullUrl(), accountStatus.getAccount().getId()));
-                default -> System.out.println("Account creation failed");
-            }
-        } catch(Exception e) {
-            System.out.println("Account " + accountStatus.getStatus() + " failed: " + e.getMessage());
-        }
+    @RabbitListener(queues = AccountOrchestratorConfiguration.createQueueName)
+    public void createAccount(@RequestBody Account account) {
+        Account newAccount = restTemplate.postForObject(accountUrlConfig.getAccountCUDFullUrl(), account, Account.class);
+        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
+    }
+
+    @RabbitListener(queues = AccountOrchestratorConfiguration.updateQueueName)
+    public void updateAccount(@PathVariable long id, @RequestBody Account account) {
+        account.setId(id);
+        restTemplate.put("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), account);
+        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
+    }
+
+    @RabbitListener(queues = AccountOrchestratorConfiguration.deleteQueueName)
+    public void deleteAccount(@PathVariable Long id) {
+        Account account = new Account();
+        account.setId(id);
+        restTemplate.delete("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id));
+        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
     }
 }
