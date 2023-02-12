@@ -7,8 +7,8 @@ import lombok.*;
 @AllArgsConstructor
 public class Account {
     private String uuid;
-    private Long customer;
-    private Long manager;
+    private String customer;
+    private String manager;
     private Double limitAmount;
     private Double balance;
 }
