@@ -1,13 +1,11 @@
-package com.bantads.accountOrchestrator.dto;
+package com.bantads.accountOrchestrator.model;
 
 import lombok.*;
-
-import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Account implements Serializable {
+public class Account {
     private Long id;
     private Long customer;
     private Long manager;
