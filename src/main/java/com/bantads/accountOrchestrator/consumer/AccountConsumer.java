@@ -29,16 +29,16 @@ public class AccountConsumer {
     }
 
     @RabbitListener(queues = AccountOrchestratorConfiguration.updateQueueName)
-    public void updateAccount(@PathVariable long id, @RequestBody Account account) {
-        account.setId(id);
+    public void updateAccount(@PathVariable String id, @RequestBody Account account) {
+        account.setUuid(id);
         restTemplate.put("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), account);
         rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
     }
 
     @RabbitListener(queues = AccountOrchestratorConfiguration.deleteQueueName)
-    public void deleteAccount(@PathVariable Long id) {
+    public void deleteAccount(@PathVariable String id) {
         Account account = new Account();
-        account.setId(id);
+        account.setUuid(id);
         restTemplate.delete("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id));
         rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
     }
