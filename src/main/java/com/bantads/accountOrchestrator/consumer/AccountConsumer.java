@@ -1,10 +1,8 @@
 package com.bantads.accountOrchestrator.consumer;
 
-import com.bantads.accountOrchestrator.config.AccountOrchestratorConfiguration;
-import com.bantads.accountOrchestrator.config.AccountRConfiguration;
-import com.bantads.accountOrchestrator.config.AccountUrlConfig;
-import com.bantads.accountOrchestrator.config.RabbitMqConfig;
+import com.bantads.accountOrchestrator.config.*;
 import com.bantads.accountOrchestrator.model.Account;
+import com.bantads.accountOrchestrator.model.Manager;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -12,6 +10,9 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 @Data
@@ -23,23 +24,51 @@ public class AccountConsumer {
     private final AccountUrlConfig accountUrlConfig;
 
     @RabbitListener(queues = AccountOrchestratorConfiguration.createQueueName)
-    public void createAccount(@RequestBody Account account) {
+    public void createAccount(Account account) {
         Account newAccount = restTemplate.postForObject(accountUrlConfig.getAccountCUDFullUrl(), account, Account.class);
         rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
+        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, ManagerConfiguration.sortRequestQueueName,1 );
     }
 
     @RabbitListener(queues = AccountOrchestratorConfiguration.updateQueueName)
-    public void updateAccount(@PathVariable String id, @RequestBody Account account) {
-        account.setUuid(id);
-        restTemplate.put("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), account);
+    public void updateAccount(Account account) {
+        restTemplate.put("%s/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), account.getUuid()), account);
         rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
     }
 
     @RabbitListener(queues = AccountOrchestratorConfiguration.deleteQueueName)
-    public void deleteAccount(@PathVariable String id) {
+    public void deleteAccount(String id) {
         Account account = new Account();
         account.setUuid(id);
         restTemplate.delete("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id));
         rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
     }
+
+    @RabbitListener(queues = ManagerConfiguration.sortResponseQueueName)
+    public void sortResponse(@RequestBody Manager[] managers) {
+        Account[] accountWithNoManager = restTemplate.getForObject("%s/no-managers".formatted(accountUrlConfig.getAccountRFullUrl()), Account[].class);
+        if ((accountWithNoManager != null ? accountWithNoManager.length : 0) == 0) {
+            return;
+        }
+        Account[] accountsWithManagers = restTemplate.getForObject("%s/count-manager".formatted(accountUrlConfig.getAccountRFullUrl()), Account[].class);
+        List<Manager> managersNotOnAnyAccount = Arrays.stream(managers)
+                .filter(manager -> Arrays.stream(accountsWithManagers)
+                        .noneMatch(account -> account.getManager()
+                        .equals(manager.getUuid())))
+                .toList();
+        if (!managersNotOnAnyAccount.isEmpty()) {
+            Manager manager = managersNotOnAnyAccount.get(0);
+            for (Account account : accountWithNoManager) {
+                account.setManager(manager.getUuid());
+                this.rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountOrchestratorConfiguration.updateQueueName, account);
+            }
+            return;
+        }
+        Account accountWithManagerWithLessAccounts = accountsWithManagers[0];
+        for (Account account : accountWithNoManager) {
+            account.setManager(accountWithManagerWithLessAccounts.getManager());
+            this.rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountOrchestratorConfiguration.updateQueueName, account);
+        }
+    }
+
 }
