@@ -19,9 +19,9 @@ import java.util.List;
 @AllArgsConstructor
 public class AccountConsumer {
 
-    private final RabbitTemplate rabbitTemplate;
-    private final RestTemplate restTemplate;
-    private final AccountUrlConfig accountUrlConfig;
+    private RabbitTemplate rabbitTemplate;
+    private RestTemplate restTemplate;
+    private AccountUrlConfig accountUrlConfig;
 
     @RabbitListener(queues = AccountOrchestratorConfiguration.createQueueName)
     public void createAccount(Account account) {
@@ -41,6 +41,12 @@ public class AccountConsumer {
         Account account = new Account();
         account.setUuid(id);
         restTemplate.delete("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id));
+        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
+    }
+
+    @RabbitListener(queues = AccountOrchestratorConfiguration.patchQueueName)
+    public void patchAccount(Account account) {
+        restTemplate.patchForObject("%s/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), account.getUuid()), account, Account.class);
         rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
     }
 

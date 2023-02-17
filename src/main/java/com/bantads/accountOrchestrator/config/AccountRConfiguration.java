@@ -16,6 +16,7 @@ public class AccountRConfiguration {
     public static final String createQueueName = "accountR.create";
     public static final String updateQueueName = "accountR.update";
     public static final String deleteQueueName = "accountR.delete";
+    public static final String patchQueueName = "accountR.patch";
 
     @Bean
     public Queue createQueueCreate() {
@@ -33,6 +34,11 @@ public class AccountRConfiguration {
     }
 
     @Bean
+    public Queue patchQueuePatch() {
+        return new Queue(patchQueueName, true);
+    }
+
+    @Bean
     Binding createBinding(Queue createQueueCreate, DirectExchange exchange) {
         return BindingBuilder.bind(createQueueCreate).to(exchange).with(createQueueName);
     }
@@ -45,6 +51,11 @@ public class AccountRConfiguration {
     @Bean
     Binding deleteBinding(Queue deleteQueueDelete, DirectExchange exchange) {
         return BindingBuilder.bind(deleteQueueDelete).to(exchange).with(deleteQueueName);
+    }
+
+    @Bean
+    Binding patchBinding(Queue patchQueuePatch, DirectExchange exchange) {
+        return BindingBuilder.bind(patchQueuePatch).to(exchange).with(patchQueueName);
     }
 
 }
