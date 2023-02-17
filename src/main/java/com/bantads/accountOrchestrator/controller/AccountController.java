@@ -51,7 +51,7 @@ public class AccountController {
         Account account = new Account();
         account.setUuid(id);
         restTemplate.delete("%s/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), id));
-        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.patchQueueName, account);
+        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
         return ResponseEntity.ok("Account deleted");
     }
 
