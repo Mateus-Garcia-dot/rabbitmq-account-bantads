@@ -15,9 +15,9 @@ import org.springframework.web.client.RestTemplate;
 @RequestMapping("/account")
 public class AccountController {
 
-    private final RabbitTemplate rabbitTemplate;
-    private final RestTemplate restTemplate;
-    private final AccountUrlConfig accountUrlConfig;
+    private RabbitTemplate rabbitTemplate;
+    private RestTemplate restTemplate;
+    private AccountUrlConfig accountUrlConfig;
 
 
     @GetMapping()
@@ -27,7 +27,7 @@ public class AccountController {
 
     @GetMapping("/{id}")
     public Account getAccountById(@PathVariable Long id) {
-        return restTemplate.getForObject("%s/%d".formatted(accountUrlConfig.getAccountRFullUrl(), id), Account.class);
+        return restTemplate.getForObject("%s/%s".formatted(accountUrlConfig.getAccountRFullUrl(), id), Account.class);
     }
 
     @PostMapping()
@@ -40,7 +40,7 @@ public class AccountController {
     @PutMapping("/{id}")
     public Account updateAccount(@PathVariable String id, @RequestBody Account account) {
         account.setUuid(id);
-        restTemplate.put("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), account);
+        restTemplate.put("%s/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), account);
         rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
         return account;
     }
@@ -49,7 +49,14 @@ public class AccountController {
     public void deleteAccount(@PathVariable String id) {
         Account account = new Account();
         account.setUuid(id);
-        restTemplate.delete("%s/%d".formatted(accountUrlConfig.getAccountCUDFullUrl(), id));
+        restTemplate.delete("%s/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), id));
+        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
+    }
+
+    @PatchMapping("/{id}")
+    public void patchAccount(@PathVariable String id, @RequestBody Account account) {
+        account.setUuid(id);
+        restTemplate.patchForObject("%s/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), account, Account.class);
         rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
     }
 

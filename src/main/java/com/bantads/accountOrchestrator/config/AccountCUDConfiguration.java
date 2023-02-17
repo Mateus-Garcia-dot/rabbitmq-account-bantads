@@ -16,6 +16,7 @@ public class AccountCUDConfiguration {
     public static final String createQueueName = "accountCUD.create";
     public static final String updateQueueName = "accountCUD.update";
     public static final String deleteQueueName = "accountCUD.delete";
+    public static final String patchQueueName = "accountCUD.patch";
 
     @Bean
     public Queue AccountCudCreateQueueCreate() {
@@ -33,6 +34,11 @@ public class AccountCUDConfiguration {
     }
 
     @Bean
+    public Queue AccountCudPatchQueuePatch() {
+        return new Queue(patchQueueName, true);
+    }
+
+    @Bean
     Binding AccountCudCreateBinding(Queue AccountCudCreateQueueCreate, DirectExchange exchange) {
         return BindingBuilder.bind(AccountCudCreateQueueCreate).to(exchange).with(createQueueName);
     }
@@ -45,6 +51,11 @@ public class AccountCUDConfiguration {
     @Bean
     Binding AccountCudDeleteBinding(Queue AccountCudDeleteQueueDelete, DirectExchange exchange) {
         return BindingBuilder.bind(AccountCudDeleteQueueDelete).to(exchange).with(deleteQueueName);
+    }
+
+    @Bean
+    Binding AccountCudPatchBinding(Queue AccountCudPatchQueuePatch, DirectExchange exchange) {
+        return BindingBuilder.bind(AccountCudPatchQueuePatch).to(exchange).with(patchQueueName);
     }
 
 }

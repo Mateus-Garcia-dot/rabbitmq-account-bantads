@@ -15,6 +15,7 @@ public class AccountOrchestratorConfiguration {
     public static final String createQueueName = "account.create";
     public static final String updateQueueName = "account.update";
     public static final String deleteQueueName = "account.delete";
+    public static final String patchQueueName = "account.patch";
 
     @Bean
     public Queue AccountOrchestratorCreateQueueCreate() {
@@ -32,6 +33,11 @@ public class AccountOrchestratorConfiguration {
     }
 
     @Bean
+    public Queue AccountOrchestratorPatchQueuePatch() {
+        return new Queue(patchQueueName, true);
+    }
+
+    @Bean
     Binding AccountOrchestratorCreateBinding(Queue AccountOrchestratorCreateQueueCreate, DirectExchange exchange) {
         return BindingBuilder.bind(AccountOrchestratorCreateQueueCreate).to(exchange).with(createQueueName);
     }
@@ -44,6 +50,11 @@ public class AccountOrchestratorConfiguration {
     @Bean
     Binding AccountOrchestratorDeleteBinding(Queue AccountOrchestratorDeleteQueueDelete, DirectExchange exchange) {
         return BindingBuilder.bind(AccountOrchestratorDeleteQueueDelete).to(exchange).with(deleteQueueName);
+    }
+
+    @Bean
+    Binding AccountOrchestratorPatchBinding(Queue AccountOrchestratorPatchQueuePatch, DirectExchange exchange) {
+        return BindingBuilder.bind(AccountOrchestratorPatchQueuePatch).to(exchange).with(patchQueueName);
     }
 
 }
