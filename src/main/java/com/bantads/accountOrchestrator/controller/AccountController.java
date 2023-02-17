@@ -42,7 +42,7 @@ public class AccountController {
     public ResponseEntity<Account> updateAccount(@PathVariable String id, @RequestBody Account account) {
         account.setUuid(id);
         restTemplate.put("%s/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), account);
-        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
+        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.updateQueueName, account);
         return ResponseEntity.ok(account);
     }
 
@@ -51,14 +51,14 @@ public class AccountController {
         Account account = new Account();
         account.setUuid(id);
         restTemplate.delete("%s/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), id));
-        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.patchQueueName, account);
+        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.deleteQueueName, account);
         return ResponseEntity.ok("Account deleted");
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<Account> patchAccount(@PathVariable String id, @RequestBody Account account) {
         account.setUuid(id);
-        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.createQueueName, account);
+        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.patchQueueName, account);
         Account patchedAccount = restTemplate.patchForObject("%s/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), account, Account.class);
         return ResponseEntity.ok(patchedAccount);
     }
