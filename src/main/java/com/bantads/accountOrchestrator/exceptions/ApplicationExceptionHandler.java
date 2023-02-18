@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.handler.ResponseStatusExceptionHandler;
 
-@Data
 @ControllerAdvice
 public class ApplicationExceptionHandler extends ResponseStatusExceptionHandler {
 
