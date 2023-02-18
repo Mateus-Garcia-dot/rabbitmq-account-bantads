@@ -16,7 +16,7 @@ public class AccountCUDConfiguration {
     public static final String createQueueName = "accountCUD.create";
     public static final String updateQueueName = "accountCUD.update";
     public static final String deleteQueueName = "accountCUD.delete";
-    public static final String patchQueueName = "accountCUD.patch";
+    public static final String patchQueueName = "accountCUD.patch.consumer";
 
     @Bean
     public Queue AccountCudCreateQueueCreate() {
