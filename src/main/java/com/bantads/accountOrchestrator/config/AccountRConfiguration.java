@@ -16,7 +16,7 @@ public class AccountRConfiguration {
     public static final String createQueueName = "accountR.create";
     public static final String updateQueueName = "accountR.update";
     public static final String deleteQueueName = "accountR.delete";
-    public static final String patchQueueName = "accountR.patch";
+    public static final String patchQueueName = "accountR.patch.consumer";
 
     @Bean
     public Queue createQueueCreate() {
