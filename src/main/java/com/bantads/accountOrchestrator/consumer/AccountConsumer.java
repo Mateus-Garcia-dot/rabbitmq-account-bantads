@@ -46,7 +46,8 @@ public class AccountConsumer {
 
     @RabbitListener(queues = AccountOrchestratorConfiguration.patchQueueName)
     public void patchAccount(Account account) {
-        restTemplate.patchForObject("%s/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), account.getUuid()), account, Account.class);
+        System.out.println(account);
+        restTemplate.patchForObject("%s/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), account.getCustomer()), account, Account.class);
         rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.patchQueueName, account);
     }
 
