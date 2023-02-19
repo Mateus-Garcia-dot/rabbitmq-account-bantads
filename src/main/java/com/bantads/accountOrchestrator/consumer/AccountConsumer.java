@@ -82,6 +82,7 @@ public class AccountConsumer {
     public void deleteManager(String id) {
         restTemplate.delete("%s/manager/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), Account[].class);
         rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.deleteManagerQueueName, id);
+        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, ManagerConfiguration.sortRequestQueueName, 1);
     }
 
 }

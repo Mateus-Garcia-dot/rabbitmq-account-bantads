@@ -2,6 +2,7 @@ package com.bantads.accountOrchestrator.controller;
 
 import com.bantads.accountOrchestrator.config.AccountRConfiguration;
 import com.bantads.accountOrchestrator.config.AccountUrlConfig;
+import com.bantads.accountOrchestrator.config.ManagerConfiguration;
 import com.bantads.accountOrchestrator.config.RabbitMqConfig;
 import com.bantads.accountOrchestrator.model.Account;
 import lombok.*;
@@ -67,5 +68,6 @@ public class AccountController {
     public void deleteManager(@PathVariable String id) {
         restTemplate.delete("%s/manager/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), Account[].class);
         rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.deleteManagerQueueName, id);
+        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, ManagerConfiguration.sortRequestQueueName, 1);
     }
 }
