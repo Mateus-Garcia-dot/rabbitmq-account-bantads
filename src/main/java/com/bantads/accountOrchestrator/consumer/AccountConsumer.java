@@ -78,7 +78,7 @@ public class AccountConsumer {
         }
     }
 
-    @RabbitListener(queues = AccountRConfiguration.deleteManagerQueueName)
+    @RabbitListener(queues = AccountOrchestratorConfiguration.deleteManagerQueueName)
     public void deleteManager(String id) {
         restTemplate.delete("%s/manager/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), Account[].class);
         rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.deleteManagerQueueName, id);
