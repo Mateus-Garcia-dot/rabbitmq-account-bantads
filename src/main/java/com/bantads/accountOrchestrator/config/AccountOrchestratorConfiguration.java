@@ -15,7 +15,7 @@ public class AccountOrchestratorConfiguration {
     public static final String createQueueName = "account.create";
     public static final String updateQueueName = "account.update";
     public static final String deleteQueueName = "account.delete";
-    public static final String patchQueueName = "account.patch";
+    public static final String patchQueueName = "account.patch.consumer";
 
     @Bean
     public Queue AccountOrchestratorCreateQueueCreate() {
