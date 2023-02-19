@@ -62,4 +62,10 @@ public class AccountController {
         Account patchedAccount = restTemplate.patchForObject("%s/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), account, Account.class);
         return ResponseEntity.ok(patchedAccount);
     }
+
+    @DeleteMapping("/manager/{id}")
+    public void deleteManager(@PathVariable String id) {
+        restTemplate.delete("%s/manager/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), Account[].class);
+        rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.deleteManagerQueueName, id);
+    }
 }
