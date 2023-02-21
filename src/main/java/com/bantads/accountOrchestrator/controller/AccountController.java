@@ -31,6 +31,11 @@ public class AccountController {
           return  ResponseEntity.ok(restTemplate.getForObject(accountUrlConfig.getAccountRFullUrl(), Account[].class));
     }
 
+    @GetMapping("/manager/{id}")
+    public ResponseEntity<Account[]> getAccountByManager(@PathVariable String id) {
+        return ResponseEntity.ok(restTemplate.getForObject("%s/manager/%s".formatted(accountUrlConfig.getAccountRFullUrl(), id), Account[].class));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Account> getAccountById(@PathVariable Long id) {
         return ResponseEntity.ok(restTemplate.getForObject("%s/%s".formatted(accountUrlConfig.getAccountRFullUrl(), id), Account.class));
