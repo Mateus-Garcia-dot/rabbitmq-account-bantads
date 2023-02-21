@@ -22,8 +22,8 @@ public class AccountController {
     private AccountUrlConfig accountUrlConfig;
 
     @GetMapping("/customer/{id}")
-    public ResponseEntity<Account[]> getAccountByCustomer(@PathVariable String id) {
-        return ResponseEntity.ok(restTemplate.getForObject("%s/customer/%s".formatted(accountUrlConfig.getAccountRFullUrl(), id), Account[].class));
+    public ResponseEntity<Account> getAccountByCustomer(@PathVariable String id) {
+        return ResponseEntity.ok(restTemplate.getForObject("%s/customer/%s".formatted(accountUrlConfig.getAccountRFullUrl(), id), Account.class));
     }
 
     @GetMapping()
