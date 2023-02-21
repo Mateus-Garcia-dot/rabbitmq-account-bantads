@@ -62,7 +62,7 @@ public class AccountController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<Account> patchAccount(@PathVariable String id, @RequestBody Account account) {
-        account.setUuid(id);
+        account.setCustomer(id);
         rabbitTemplate.convertAndSend(RabbitMqConfig.exchangeName, AccountRConfiguration.patchQueueName, account);
         Account patchedAccount = restTemplate.patchForObject("%s/%s".formatted(accountUrlConfig.getAccountCUDFullUrl(), id), account, Account.class);
         return ResponseEntity.ok(patchedAccount);
